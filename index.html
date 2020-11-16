@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="utf-8" name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Annuaire délégués territoriaux</title>
+    <!-- bootstrap -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+    <link rel="stylesheet" href="lib/leaflet.css">
+    <link rel="stylesheet" href="lib/font-awesome.min.css">
+    <link rel="stylesheet" href="lib/leaflet-sidebar.min.css">
+    <link rel="stylesheet" href="lib/L.Control.ZoomMin.css">
+    <link rel="stylesheet" href="lib/Control.FullScreen.css" />
+    <link rel="stylesheet" href="css/font.css">
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.bundle.min.js"></script>
+    <script src='lib/tabletop.min.js'></script>
+    <script src="lib/leaflet.js"></script>
+    <script src="lib/d3.min.js"></script>
+    <script src="lib/leaflet-sidebar.min.js"></script>
+    <script src="lib/L.Control.ZoomMin.js"></script>
+    <script src="lib/Control.FullScreen.js"></script>
+  </head>
+  <body>
+    <div id="sidebar" class="leaflet-sidebar collapsed">
+      <!-- nav tabs -->
+      <div class="leaflet-sidebar-tabs">
+          <!-- top aligned tabs -->
+          <ul role="tablist">
+            <li><a href="#home" role="tab"><i class="fas fa-home"></i></a></li>
+        </ul>
+        <!-- bottom aligned tabs -->
+        <ul role="tablist">
+          <li><a href="#a-propos" role="tab"><i class="fas fa-question"></i></a></li>
+          <li><a href="https://github.com/cget-carto/France-services" target="_blank"><i class="fas fa-github"></i></a></li>
+          </ul>
+      </div>
+      <!-- panel content -->
+      <div class="leaflet-sidebar-content">
+          <div class="leaflet-sidebar-pane" id="home">
+              <h1 class="leaflet-sidebar-header">
+                Accueil
+                <span class="leaflet-sidebar-close">
+                  <i class="fas fa-arrow-left"></i>
+                </span>
+              </h1>
+              <span class="leaflet-sidebar-close"></span>
+              <br>
+              <!-- <img src="img/logo_anct.png" width="100%" style = 'padding-bottom: 5%;'> -->
+              <h4><b>Annuaire des délégués territoriaux de l'Agence</b> <br></h4>
+              <!-- corps de l'appli -->
+              <div id = "app">
+                <div id = "liste-contacts" v-if = "showInfo == false">
+                  <!-- barre de recherche -->
+                  <p>Trouvez un contact en cliquant sur un département ou en le recherchant ci-dessous</p>
+                  <div class="input-group" id = "search-bar-container">
+                    <span class="input-group-prepend">
+                        <div class="input-group-text bg-white border-right-0"><i class="fa fa-search form-control-icon"></i></div>
+                    </span>
+                    <input class="form-control shadow-none py-2 border-right-0 border-left-0" 
+                           type="search" placeholder="Filtrer par département" 
+                           id = "searchField" v-model="search" v-on:change = "getInputVal">
+                  </div>
+                  <!-- <div class="form-group" id = 'search-bar-container'>
+                    <span class="fa fa-search form-control-icon"></span>
+                    <input type="text" class ="form-control" id = "searchField" placeholder="Filtrer par département" v-model="search" v-on:change = "getInputVal">
+                    <div class="input-group-append">
+                      <button class="btn bg-transparent">
+                        <i class="fa fa-times"></i>
+                      </button>
+                    </div>
+                  </div> -->
+                  <!-- liste des contacts -->
+                  <custom-card v-for = "contact in filteredList" id = "${contact.id}" v-bind:id = "contact.id" v-bind:contact = "contact" @click.native="clickedCard($event)"></custom-card>
+                </div>
+                <div v-else>
+                  <fiche-info id = "fiche-contact" v-for = "contact in selectedCard" v-bind:contact = "contact"></fiche-info>
+                  <button type="button" @click = "buttonAction" class="btn btn-primary btn-lg" id = "back-button">
+                    <i class = "fa fa-arrow-left"></i>
+                    Retour
+                  </button>
+                </div>
+              </div>
+          </div>
+          <!-- Panneau à propos -->
+          <div class="leaflet-sidebar-pane" id="a-propos">
+              <h2 class="leaflet-sidebar-header">
+                À propos
+                <span class="leaflet-sidebar-close">
+                  <i data-feather="skip-back" class="feather-icons"></i>
+                </span>
+              </h2>
+              <img src="img/logo_anct.png" width="100%" style = 'padding-bottom: 5%; padding-top: 5%;'>
+              <b>Réalisation :</b>
+              ANCT, Pôle analyse & diagnostics territoriaux - <a href = 'https://cartotheque.anct.gouv.fr/cartes' target="_blank">Service cartographie</a>, 11/2020
+            </div>
+          </div>
+      </div>
+    </div>
+    <!-- carte leaflet -->
+    <div id="mapid"></div>
+    <!-- chargement script js -->
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+    <script src= "src/app.js"></script>
+  </body>
+</html>
