@@ -1,0 +1,9 @@
+package.json
+node_modules
+package-lock.json
+*.R
+*.Rproj
+package.json
+package-lock.json
+/nodes_modules
+/data_init

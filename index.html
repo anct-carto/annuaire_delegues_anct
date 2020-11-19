@@ -12,6 +12,7 @@
     <link rel="stylesheet" href="lib/Control.FullScreen.css" />
     <link rel="stylesheet" href="css/font.css">
     <link rel="stylesheet" href="css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
     <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.bundle.min.js"></script>
@@ -42,44 +43,45 @@
               <h1 class="leaflet-sidebar-header">
                 Accueil
                 <span class="leaflet-sidebar-close">
-                  <i class="fas fa-arrow-left"></i>
+                  <i class="fas fa-step-backward"></i>
                 </span>
               </h1>
               <span class="leaflet-sidebar-close"></span>
               <br>
               <!-- <img src="img/logo_anct.png" width="100%" style = 'padding-bottom: 5%;'> -->
-              <h4><b>Annuaire des délégués territoriaux de l'Agence</b> <br></h4>
+              <h4>
+                <b>Annuaire des délégués territoriaux de l'Agence</b>
+              </h4>
+              <br>
               <!-- corps de l'appli -->
               <div id = "app">
-                <div id = "liste-contacts" v-if = "showInfo == false">
+                <div id = "liste-contacts">
                   <!-- barre de recherche -->
-                  <p>Trouvez un contact en cliquant sur un département ou en le recherchant ci-dessous</p>
+                  <p>Saisissez un département sur la barre de recherche ou sélectionnez-le sur la carte interactive</p>
                   <div class="input-group" id = "search-bar-container">
                     <span class="input-group-prepend">
                         <div class="input-group-text bg-white border-right-0"><i class="fa fa-search form-control-icon"></i></div>
                     </span>
-                    <input class="form-control shadow-none py-2 border-right-0 border-left-0" 
+                    <input class="form-control shadow-none py-2 border-right-0 border-left-0"
                            type="search" placeholder="Filtrer par département" 
-                           id = "searchField" v-model="search" v-on:change = "getInputVal">
+                           id="searchField" v-model="search">
+                    <button id = "reset-app" class="btn" v-on:click="search = ''"><i class="fa fa-refresh"></i></button>
                   </div>
-                  <!-- <div class="form-group" id = 'search-bar-container'>
-                    <span class="fa fa-search form-control-icon"></span>
-                    <input type="text" class ="form-control" id = "searchField" placeholder="Filtrer par département" v-model="search" v-on:change = "getInputVal">
-                    <div class="input-group-append">
-                      <button class="btn bg-transparent">
-                        <i class="fa fa-times"></i>
-                      </button>
-                    </div>
-                  </div> -->
                   <!-- liste des contacts -->
-                  <custom-card v-for = "contact in filteredList" id = "${contact.id}" v-bind:id = "contact.id" v-bind:contact = "contact" @click.native="clickedCard($event)"></custom-card>
-                </div>
-                <div v-else>
-                  <fiche-info id = "fiche-contact" v-for = "contact in selectedCard" v-bind:contact = "contact"></fiche-info>
-                  <button type="button" @click = "buttonAction" class="btn btn-primary btn-lg" id = "back-button">
-                    <i class = "fa fa-arrow-left"></i>
-                    Retour
-                  </button>
+                  <div v-if = "filteredList.length">
+                    <custom-card v-for = "contact in filteredList" id = "${contact.id}" v-bind:id = "contact.id" v-bind:contact = "contact"></custom-card>
+                  </div>
+                  <div v-else>
+
+                    <span>
+                      <i class="fas fa-exclamation-triangle"></i>
+                      Ce département n'a pas encore de contact.
+                    </span>
+                    <!-- <button type="button" @click = "buttonAction" class="btn btn-primary btn-lg" id = "back-button">
+                      <i class = "fa fa-arrow-left"></i>
+                      Retour
+                    </button> -->
+                  </div>
                 </div>
               </div>
           </div>
@@ -88,7 +90,7 @@
               <h2 class="leaflet-sidebar-header">
                 À propos
                 <span class="leaflet-sidebar-close">
-                  <i data-feather="skip-back" class="feather-icons"></i>
+                  <i class="fas fa-step-backward"></i>
                 </span>
               </h2>
               <img src="img/logo_anct.png" width="100%" style = 'padding-bottom: 5%; padding-top: 5%;'>
@@ -101,7 +103,6 @@
     <!-- carte leaflet -->
     <div id="mapid"></div>
     <!-- chargement script js -->
-    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
     <script src= "src/app.js"></script>
   </body>
 </html>

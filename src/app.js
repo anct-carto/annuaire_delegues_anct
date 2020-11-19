@@ -63,38 +63,51 @@ let zoomMin = document.querySelectorAll('.leaflet-control-zoom-min');
 
 zoomMin[0].addEventListener('click', () => {
   resetView();
+});
+
+
+
+
+/* -------------------------------------------------------------------------- */
+/*                                SIDEBAR                                     */
+/* -------------------------------------------------------------------------- */
+
+
+let sidebar = L.control.sidebar({
+  autopan: false,       
+  closeButton: true,    
+  container: 'sidebar', 
+  position: 'left',
+}).addTo(map);
+
+window.addEventListener('DOMContentLoaded', () => {
+setTimeout(() => {
+  sidebar.open('home');
+}, 150);
 })
+
+// be notified when a panel is opened
+sidebar.on('content', function (ev) {
+  switch (ev.id) {
+      case 'home':
+      sidebar.options.autopan = true;
+      break;
+      default:
+        sidebar.options.autopan = true;
+  }
+});
+
+
+/* -------------------------------------------------------------------------- */
+/*                                  DATA                                      */
+/* -------------------------------------------------------------------------- */
 
 
 
 // chargement couches géométriques
-departements = getData("geom_dep.geojson");
+dep_data = getData("geom_dep.geojson");
 cercles_drom = getData("cercles_drom.geojson");
 
-
-cercles_drom.then(geojson => {
-  new L.GeoJSON(geojson, {
-    fillColor: 'white',
-    fillOpacity:0,
-    color: "white",
-    weight: 1.5
-  }).addTo(map)
-})
-
-async function getData(file) {
-  let res = await fetch("data/".concat(file));
-  let data = await res.json();
-  
-  return data;
-};
-
-let geojson;
-
-let geojson_style = {
-  fillColor: '#5770be',
-  weight: 0.5,
-  color: 'white',
-};
 
 let geojson_style_no_data = {
   fillColor: '#5770be',
@@ -102,46 +115,70 @@ let geojson_style_no_data = {
   color: 'white',
 };
 
+
+async function getData(file) {
+  let res = await fetch("data/".concat(file));
+  let data = await res.json();
+  return data;
+};
+
+function drawGeoJSON(geojson) {
+  return new L.GeoJSON(geojson, {
+    interactive:disableFeatureClick,
+    style: geojsonStyle,
+    onEachFeature: onEachFeature
+  }).bindTooltip((e) => {
+    return e.feature.properties.lib_dep + ' - ' + e.feature.properties.insee_dep 
+  }, {direction: "center", sticky:true })
+};
+
+
+function geojsonStyle(feature) {
+  return {
+    fillColor: '#5770be',
+    weight: 0.5,
+    color: 'white',
+  };
+};
+
+
+function groupBy(df, keyGetter) {
+  const map = new Map();
+  df.forEach((item) => {
+       const key = keyGetter(item);
+       const collection = map.get(key);
+       if (!collection) {
+           map.set(key, [item]);
+       } else {
+           collection.push(item);
+       }
+  });
+  return map;
+}
+
+let clicked_lib_dep;
+
 function disableFeatureClick(feature) {
   if (feature.properties.insee_dep === "01") {
     return false
   } else { return true}
 }
 
-function drawGeoJSON(geojson) {
-  departements = new L.GeoJSON(geojson, {
-    interactive:disableFeatureClick,
-    style: geojson_style,
-    onEachFeature: onEachFeature
-  }).bindTooltip((e) => {
-    return e.feature.properties.lib_dep
-  }, {direction: "center", sticky:true })
-  .on("click", (layer) => {
-    searchField.value = '';
-    clicked_lib_dep = layer.sourceTarget.feature.properties.lib_dep;
-    searchField.value = clicked_lib_dep;    
-    
-    
-    
-    test = Array.from(cards).filter(card => {
-      return card.firstChild.innerHTML.split(" - ")[0] === clicked_lib_dep
-    });
-    
-    Array.from(cards).forEach(card => {
-      child = card.firstChild.innerHTML;
-      
-      // console.log(child);
-      if (child.split(" - ")[0] != clicked_lib_dep) {
-        card.style.display = 'none';
-      } else {
-        card.style.display = 'block';
-      };
-    });    
-  }).addTo(map);
-}
 
-function resetHighlight(e) {
-  departements.resetStyle(e.target);
+function highlightGeomOnListHover(geojson) {
+  Array.from(cards).forEach(card => {
+    card.addEventListener("mouseover", () => {
+      child = card.firstChild.innerHTML;
+      card_insee_dep = child.split(" - ")[1]
+      console.log(card_insee_dep);      
+      for (let i in geojson) {
+        if (geojson[i].feature.properties.insee_dep === card_insee_dep) {
+          console.log(geojson[i]);
+          console.log("même id");
+        }
+      };
+    })
+  });
 }
 
 function highlightFeature(e) {
@@ -158,28 +195,43 @@ function highlightFeature(e) {
   }
 };
 
+let selected_feature = null;
+
+function resetHighlight(e) {
+  let layer = e.target;
+  if (selected_feature == null || selected_feature._leaflet_id !== layer._leaflet_id) {
+    dep_layer.resetStyle(layer);
+  }
+};
+
 
 function zoomToFeature(e) {
+  // ouvrir side panel
   sidebar.open('home');
   
+  // style element clické
   let layer = e.target;
-  
+
+  if (selected_feature !== null) {
+    var previous_feature = selected_feature;
+  }
+  // crée nouvelle sélection 
+  selected_feature = layer;
+  // zoom sur l'entité
   // map.flyToBounds(layer.getBounds(), {
   //   padding: [100,100],
   //   duration: 0.5
   // });
-  
-  layer.setStyle({
-    weight: 3,
-    color: '#ffe800',
-    fillOpacity: 1    
-  });
+
+  // s'il y a une précédente selection
+  if (previous_feature) {
+    dep_layer.resetStyle(previous_feature) // désactive la
+  }
 };
 
 
 function resetView() {
-  map.setView([46.5, -3], zoom_level,{animation: true});
-  Array.from(cards).forEach(card => card.style.display = 'block')
+  map.flyTo([46.5, -3], zoom_level,{animation: true});
 };
 
 
@@ -202,46 +254,56 @@ function onEachFeature(feature, layer) {
 // chargement données contacts sur panneau latéral
 let infos_contacts = [];
 
-
 let customCard = {
-  props: ['contact', 'display'], 
-  template: `<div class="card mb-3">
-              <div class="card-header">{{ contact.lib_dep }} - {{ contact.insee_dep }}</div>
-              <div class="card-body">
-                <h5 class="card-title"> {{ contact.interlocuteur_prenom }} {{ contact.interlocuteur_nom}}</h5>
-                <p class="card-text">{{ contact.fiche_lib_admin }}</p>
-              </div>
-            </div>`
-};
-
-let ficheInfo = {
+  data: function() {
+    return {
+      showInfo:false,
+    }
+  },
   props: ['contact'],
-  template: `<div class="card">
-              <div class="card-header">{{contact.lib_dep}} - {{contact.insee_dep}}</div>
-              <div class="card-body">
+  template: `<div class="card mb-3">
+              <div class="card-header" v-on:click="showInfo = !showInfo">
+                <div class = "card-nom-dep">
+                  <p>
+                  {{ contact.lib_dep }} - {{ contact.insee_dep }}
+                  </p>
+                </div>
+                <div class="card-text">
+                  <h5>{{ contact.fiche_lib_admin }}</h5>
+                </div>
+              </div>
+              <div class="card-body" v-show="showInfo">
                 <div class = "intro">
                   <h5 class="card-title"> {{ contact.interlocuteur_prenom }} {{ contact.interlocuteur_nom}} </h5>
                   <p class="card-title">{{ contact.interlocuteur_fonction }}</p>
                 </div>
                 <div class = "corps">
-                  <p class="card-text">
-                    <i class = "fas fa-map-marker"></i>
-                    {{ contact.fiche_lib_admin }}
-                  </p>
-                  <i class = "fas fa-envelope"></i>
-                  <ul>
-                    <li>
-                      {{ contact.interlocuteur_adresse }} 
-                    </li>
-                    <li>
-                      {{ contact.interlocuteur_cp }} {{ contact.interlocuteur_ville }}
-                    </li>
-                  </ul>
-                  <p class="card-text">
-                    <i class = "fas fa-phone" v-if = "contact.fiche_telephone.length"></i>  {{ contact.fiche_telephone }} </p>
-                  <p class="card-text">
-                    <i class = "fas fa-at" v-if = "contact.fiche_mel.length"></i> <a href = "mailto:contact.fiche_mel" target = "_blank">{{contact.fiche_mel}}</a>
-                  </p>
+                  <span>
+                    <i class = "fas fa-envelope"></i>
+                    <ul>
+                      <li>
+                        {{ contact.interlocuteur_adresse }} 
+                      </li>
+                      <li v-if = "contact.interlocuteur_comp_adresse.length">
+                        {{ contact.interlocuteur_comp_adresse }} 
+                      </li>
+                      <li>
+                        {{ contact.interlocuteur_cp }} {{ contact.interlocuteur_ville }}
+                      </li>
+                    </ul>
+                  </span><br>
+                  <span>
+                    <i class = "fas fa-phone" v-if = "contact.fiche_telephone.length"></i>
+                    <ul>
+                      <li>{{ contact.fiche_telephone }}</li>
+                    </ul>
+                  </span><br>
+                  <span>
+                    <i class = "fas fa-at card-icon" v-if = "contact.fiche_mel.length"></i>
+                    <ul>
+                      <li><a href = "mailto:contact.fiche_mel" target = "_blank">{{contact.fiche_mel}}</a></li>
+                    </ul>
+                  </span>
                 </div>
               </div>
             </div>`
@@ -251,117 +313,97 @@ let ficheInfo = {
 /*                                    VUE                                     */
 /* -------------------------------------------------------------------------- */
 
-function groupBy(df, keyGetter) {
-  const map = new Map();
-  df.forEach((item) => {
-       const key = keyGetter(item);
-       const collection = map.get(key);
-       if (!collection) {
-           map.set(key, [item]);
-       } else {
-           collection.push(item);
-       }
-  });
-  return map;
-}
+let data_url = "https://docs.google.com/spreadsheets/d/1tCv0RDbhAHsB_VBmpWTNRbB70JYcQr0oaQScd-Sn1NE/edit?usp=sharing"
 
-let clicked_lib_dep;
+function init() {
+  Tabletop.init({
+    key: data_url,
+    callback: fetchSpreadsheetData,
+    simpleSheet: true
+  })
+};
 
-// lecture données
-d3.csv("data/data_contacts.csv").then(res => {
-
+function fetchSpreadsheetData(res) {
   res.forEach(e => {
     infos_contacts.push(e)
-  });
-
-  console.log(infos_contacts);
-
-  // Liste des contacts ----- VueJS
-  let vm = new Vue({
-    el: '#app',
-    data: {
-      contacts: infos_contacts,
-      showInfo: false,
-      selectedCardId: null,
-      search: '',
-    },
-    components: { 
-      'custom-card': customCard,
-      'fiche-info': ficheInfo,
-    },
-    computed: {
-      filteredList: function() {
-        return this.contacts.filter(contact => {
-          return contact.lib_dep.concat(" ", contact.insee_dep).toLowerCase().includes(this.search.toLowerCase())
-        })
-      },
-      selectedCard: function() {
-        return this.contacts.filter(contact => {
-          // this.selectedCardId est modifiée à chaque clic dans la fonction ci-dessous
-          return contact.id === this.selectedCardId
-        })
-      }
-    },
-    methods: {
-      clickedCard: function(key) {
-        // showInfo passe en true pour afficher la div "fiche-info" et masquer la liste des cards
-        this.showInfo = !this.showInfo;
-        this.search = ''; // réinitialise la recherche
-        // récupérer l'identifiant à réutiliser pour afficher la bonne fiche info
-        this.selectedCardId = event.currentTarget.id;
-        return this.selectedCardId
-      },
-      buttonAction: function() {
-        this.showInfo = false;
-        resetView();
-      },
-      getInputVal: function(evt) {
-        this.$emit("change", evt);
-        console.log(evt);
-      }
-    }
   })
+  console.log("Data : loaded");
+}
 
-  // affichage departements
-  departements.then(res => {
-    drawGeoJSON(res);
-    // vm.search = clicked_lib_dep;
-  });
-});
+window.addEventListener('DOMContentLoaded', init);
 
 
-/* -------------------------------------------------------------------------- */
-/*                                SIDEBAR                                     */
-/* -------------------------------------------------------------------------- */
-
-
-let sidebar = L.control.sidebar({
-    autopan: false,       
-    closeButton: true,    
-    container: 'sidebar', 
-    position: 'left',
-}).addTo(map);
-
-window.addEventListener('DOMContentLoaded', () => {
-  setTimeout(() => {
-    sidebar.open('home');
-  }, 150);
-})
-
-// be notified when a panel is opened
-sidebar.on('content', function (ev) {
-    switch (ev.id) {
-        case 'autopan':
-        sidebar.options.autopan = true;
-        break;
-        default:
-          sidebar.options.autopan = true;
+// Liste des contacts ----- VueJS
+let vm = new Vue({
+  el: '#app',
+  data: {
+    contacts: infos_contacts,
+    noData:false,
+    search: '',
+  },
+  components: { 
+    'custom-card': customCard,
+  },
+  computed: {
+    filteredList: function() {
+      return this.contacts.filter(contact => {
+        return contact.lib_dep.concat(" ", contact.insee_dep).toLowerCase().includes(this.search.toLowerCase())
+      })
+    },
+  },
+  methods: {
+    toggleDiv: function() {
+      this.showInfo = !this.showInfo; // showInfo passe en true pour afficher le reste des infos
+      if (this.search = '') {
+        this.showInfo = false;
+      }
+    },
+    resetMap: function() {
+      this.search = '';
+      map.resetView();
     }
+  }
+});
+
+
+// affichage departements
+let dep_layer;
+
+dep_data.then(geojson => {
+  dep_layer = drawGeoJSON(geojson).addTo(map);
+  highlightGeomOnListHover(geojson);
+  // recherche 
+  dep_layer.on("click", layer => {
+    // recupere le code et libellé dep du polygone sélectionné
+    let insee_dep = layer.sourceTarget.feature.properties.insee_dep; 
+    let lib_dep = layer.sourceTarget.feature.properties.lib_dep; 
+    let clicked_dep = lib_dep.concat(' ', insee_dep);
+    
+    vm.search = clicked_dep; // rempli la propriété 'search' de vue avec le code dep
+    
+    document.querySelector("#reset-app").addEventListener('click', () => {
+      resetView();
+      dep_layer.resetStyle()
+    });
+    
+  })
+});
+
+cercles_drom.then(geojson => {
+  new L.GeoJSON(geojson, {
+    style: {
+      fillColor: 'white',
+      fillOpacity:0,
+      color: "white",
+      weight: 1.5
+    },
+    interactive:false,
+  }).addTo(map)
 });
 
 
 /* -------------------------------------------------------------------------- */
-/*                                VUE PARAMS                                  */
+/*                                    END                                     */
 /* -------------------------------------------------------------------------- */
 
 

@@ -14,7 +14,7 @@ gulp.task('sync', function() {
       baseDir: './',
     },
   port: 3000,
-  browser: "vivaldi"
+  browser: "chrome"
   });
 
   // watch for any change in these files then reload

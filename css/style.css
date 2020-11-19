@@ -1,5 +1,7 @@
 :root {
 	--bleu-anct:#293173;
+	--bleu-second:#5770be;
+	--jaune-anct:#ffe800
 }
 
 body {
@@ -35,8 +37,13 @@ body i {
 
 .leaflet-sidebar-header {
 	background-color: var(--bleu-anct);
+	text-transform:uppercase;
 	display: block;
 	position: static;
+}
+
+.leaflet-sidebar-header > h1 {
+	font-size: 0.5em;
 }
 
 .leaflet-sidebar-content {
@@ -129,12 +136,23 @@ input, input:focus  {
 }
 
 
+#reset-app {
+	background-color: var(--jaune-anct);
+	color: rgb(40,40,40);
+	border: solid 0.5px rgba(0,0,0,.1);
+	border-left: none;
+}
+
+#reset-app:hover {
+	opacity: .5;
+}
+
+
 /* -------------------------------------------------------------------------- */
 /* 								CASE LISTE CONTACT	 						  */
 /* -------------------------------------------------------------------------- */
 
 .card {
-	cursor: pointer;
 	transition: .05s;
 	background-color: white;
 }
@@ -145,25 +163,28 @@ input, input:focus  {
 }
 
 .card-header {
+	cursor: pointer;
 	background-color: var(--bleu-anct);
-	height:30px;
 	padding-top:5px;
 	color:white;
-	font-weight: bold;
-	font-size:.9em;
+	font-family: 'Marianne-Bold';
+}
+
+.card-nom-dep {
+	margin-top: 0;
+	font-size:.85em;
 	text-transform:uppercase;
 }
 
-#back-button {
-	margin-top: 20px !important; 
-	background-color: #5770be;
-	border:none
-}
-
-#back-button:hover {
-	background-color: #5770be;
-	opacity: .75;
-}
+/* .card-nom-dep::after {
+	position: absolute;
+	content: '';
+	margin-top: -10px;
+	margin-left: -7%;
+    width: 102%;
+    height: 1px;
+    background-color: var(--jaune-anct);	
+} */
 
 .card-title {
 	font-family: "Marianne-Bold";
@@ -172,9 +193,9 @@ input, input:focus  {
 .intro::after {
 	position: absolute;
 	content: '';
-    width: 4rem;
+    width: 3rem;
     height: 0.5rem;
-    background-color: #ffe800;
+    background-color: var(--bleu-second);
 }
 
 .corps {
@@ -200,38 +221,11 @@ ul {
 }
 
 .fas {
-	vertical-align: middle;
+	align-items: center
 }
 
 .fas::after {
 	content:"   ";
-}
-
-/* -------------------------------------------------------------------------- */
-/* 								FICHE d'INFORMATION	 						  */
-/* -------------------------------------------------------------------------- */
-
-.picto-fiche {
-	margin: 0;
-	padding:0;
-	margin-top: -3px;
-	vertical-align: middle;
-	height:20px;
-	padding-right: 10px;
-};
-
-td {
-	padding: 10px;
-}
-
-#ficheInfo > table > tbody > tr > td {
-	padding-top:5px;
-	padding-left: 30px;
-}
-
-#ficheInfo > h2 {
-	color:#273375;
-	margin-bottom: 5px;
 }
 
 /* -------------------------------------------------------------------------- */
