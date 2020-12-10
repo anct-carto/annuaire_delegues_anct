@@ -301,7 +301,7 @@ let customCard = {
                   <span>
                     <i class = "fas fa-at card-icon" v-if = "contact.fiche_mel.length"></i>
                     <ul>
-                      <li><a href = "mailto:contact.fiche_mel" target = "_blank">{{contact.fiche_mel}}</a></li>
+                      <li><a v-bind:href = "'mailto:' + contact.fiche_mel" target = "_blank">{{contact.fiche_mel}}</a></li>
                     </ul>
                   </span>
                 </div>
