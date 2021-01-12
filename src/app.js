@@ -303,6 +303,12 @@ let customCard = {
                     <ul>
                       <li><a v-bind:href = "'mailto:' + contact.fiche_mel" target = "_blank">{{contact.fiche_mel}}</a></li>
                     </ul>
+                  </span><br>
+                  <span>
+                    <i class = "fas fa-external-link card-icon" v-if = "contact.site_web.length"></i>
+                    <ul>
+                      <li><a v-bind:href = "contact.site_web" target = "_blank">{{contact.site_web}}</a></li>
+                    </ul>
                   </span>
                 </div>
               </div>
