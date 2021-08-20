@@ -319,14 +319,19 @@ let customCard = {
 /*                                    VUE                                     */
 /* -------------------------------------------------------------------------- */
 
-let data_url = "https://docs.google.com/spreadsheets/d/1tCv0RDbhAHsB_VBmpWTNRbB70JYcQr0oaQScd-Sn1NE/edit?usp=sharing"
+let data_url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSHXY9QA7QkHrDHQUAx32hIaBAVcIwzWLH4udws0wPRsB7ckfP7m-9xgA5aLRpAQwMeW4NJeSNWrTGH/pub?output=csv"
 
 function init() {
-  Tabletop.init({
-    key: data_url,
-    callback: fetchSpreadsheetData,
-    simpleSheet: true
-  })
+  Papa.parse(data_url, {
+    download: true,
+    header: true,
+    complete: (results) => fetchSpreadsheetData(results.data)
+  });
+  // Tabletop.init({
+  //   key: data_url,
+  //   callback: fetchSpreadsheetData,
+  //   simpleSheet: true
+  // })
 };
 
 function fetchSpreadsheetData(res) {

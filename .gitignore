@@ -1,9 +1,10 @@
 package.json
 node_modules
 package-lock.json
+settings.json
 *.R
 *.Rproj
-package.json
-package-lock.json
 /nodes_modules
 /data_init
+capture_annuaire.png
+Thumbs.db
