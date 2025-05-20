@@ -1,0 +1,13 @@
+{
+    "name": "annuaire_delegues_anct",
+    "version": "1.0.0",
+    "description": "Annuaire des délégués territoriaux de l'ANCT",
+    "main": "index.html",
+    "scripts": {
+      "start": "gulp sync"
+    },
+    "devDependencies": {
+      "gulp": "^4.0.2",
+      "browser-sync": "^2.29.3"
+    }
+  } 

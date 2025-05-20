@@ -1,10 +1,12 @@
 <!DOCTYPE html>
-<html lang="en" dir="ltr">
+<html lang="fr" dir="ltr">
   <head>
     <meta charset="utf-8" name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Annuaire des délégués territoriaux de l'Agence Nationale de la Cohésion des Territoires (ANCT)">
+    <meta name="theme-color" content="#ffffff">
     <title>Annuaire des délégués territoriaux de l'ANCT</title>
     <link rel="shortcut icon" href="img/favicon.png" type="image/png" />
-    <!-- bootstrap -->
+    <!-- Styles -->
     <link rel="stylesheet" href="lib/bootstrap.min.css">
     <link rel="stylesheet" href="lib/leaflet.css">
     <link rel="stylesheet" href="lib/font-awesome.min.css">
@@ -13,96 +15,85 @@
     <link rel="stylesheet" href="lib/Control.FullScreen.css" />
     <link rel="stylesheet" href="css/font.css">
     <link rel="stylesheet" href="css/style.css">
-    <script src="lib/vue.min.js"></script>
-    <script src="lib/jquery.min.js"></script>
-    <script src="lib/bootstrap.bundle.min.js"></script>
-<!--     <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
-    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.bundle.min.js"></script>
- -->    <script src='lib/papaparse.min.js'></script>
-    <script src="lib/leaflet.js"></script>
-    <script src="lib/d3.min.js"></script>
-    <script src="lib/leaflet-sidebar.min.js"></script>
-    <script src="lib/L.Control.ZoomMin.js"></script>
-    <script src="lib/Control.FullScreen.js"></script>
+    <script src="lib/vue.min.js" defer></script>
+    <script src='lib/papaparse.min.js' defer></script>
+    <script src="lib/leaflet.js" defer></script>
+    <script src="lib/d3.min.js" defer></script>
+    <script src="lib/leaflet-sidebar.min.js" defer></script>
+    <script src="lib/L.Control.ZoomMin.js" defer></script>
+    <script src="lib/Control.FullScreen.js" defer></script>
   </head>
   <body>
-    <div id="sidebar" class="leaflet-sidebar collapsed">
+    <div id="sidebar" class="leaflet-sidebar collapsed" role="complementary">
       <!-- nav tabs -->
       <div class="leaflet-sidebar-tabs">
           <!-- top aligned tabs -->
           <ul role="tablist">
-            <li><a href="#home" role="tab"><i class="fas fa-home"></i></a></li>
+            <li><a href="#home" role="tab" aria-label="Accueil" aria-selected="true"><i class="fas fa-home" aria-hidden="true"></i></a></li>
         </ul>
         <!-- bottom aligned tabs -->
         <ul role="tablist">
-          <li><a href="#a-propos" role="tab"><i class="fas fa-question"></i></a></li>
-          <li><a href="https://github.com/anct-carto/annuaire_delegues_anct" target="_blank"><i class="fas fa-github"></i></a></li>
+          <li><a href="#a-propos" role="tab" aria-label="À propos" aria-selected="false"><i class="fas fa-question" aria-hidden="true"></i></a></li>
+          <li><a href="https://github.com/anct-carto/annuaire_delegues_anct" target="_blank" rel="noopener noreferrer" aria-label="Voir le code source sur GitHub"><i class="fas fa-github" aria-hidden="true"></i></a></li>
           </ul>
       </div>
       <!-- panel content -->
       <div class="leaflet-sidebar-content">
-          <div class="leaflet-sidebar-pane" id="home">
+          <div class="leaflet-sidebar-pane" id="home" role="tabpanel" aria-labelledby="home-tab">
               <h1 class="leaflet-sidebar-header">
                 Accueil
-                <span class="leaflet-sidebar-close">
-                  <i class="fas fa-step-backward"></i>
-                </span>
+                <button class="leaflet-sidebar-close" aria-label="Fermer le panneau">
+                  <i class="fas fa-step-backward" aria-hidden="true"></i>
+                </button>
               </h1>
               <span class="leaflet-sidebar-close"></span>
               <br>
-              <!-- <img src="img/logo_anct.png" width="100%" style = 'padding-bottom: 5%;'> -->
-              <h4>
+              <h2>
                 <b>Annuaire des délégués territoriaux de l'Agence</b>
-              </h4>
+              </h2>
               <br>
               <!-- corps de l'appli -->
-              <div id = "app">
-                <div id = "liste-contacts">
+              <div id="app">
+                <div id="liste-contacts">
                   <!-- barre de recherche -->
                   <p>Saisissez un département sur la barre de recherche ou sélectionnez-le sur la carte interactive</p>
-                  <div class="input-group" id = "search-bar-container">
+                  <div class="input-group" id="search-bar-container" role="search">
                     <span class="input-group-prepend">
-                        <div class="input-group-text bg-white border-right-0"><i class="fa fa-search form-control-icon"></i></div>
+                        <div class="input-group-text bg-white border-right-0"><i class="fa fa-search form-control-icon" aria-hidden="true"></i></div>
                     </span>
                     <input class="form-control shadow-none py-2 border-right-0 border-left-0"
                            type="search" placeholder="Filtrer par département" 
-                           id="searchField" v-model="search">
-                    <button id = "reset-app" class="btn" v-on:click="search = ''"><i class="fa fa-refresh"></i></button>
+                           id="searchField" v-model="search"
+                           aria-label="Filtrer par département">
+                    <button id="reset-app" class="btn" v-on:click="search = ''" aria-label="Réinitialiser la recherche"><i class="fa fa-refresh" aria-hidden="true"></i></button>
                   </div>
                   <!-- liste des contacts -->
-                  <div v-if = "filteredList.length">
-                    <custom-card v-for = "contact in filteredList" id = "${contact.id}" v-bind:id = "contact.id" v-bind:contact = "contact"></custom-card>
+                  <div v-if="filteredList.length" role="list">
+                    <custom-card v-for="contact in filteredList" id="${contact.id}" v-bind:id="contact.id" v-bind:contact="contact" role="listitem"></custom-card>
                   </div>
-                  <div v-else>
-
+                  <div v-else role="alert">
                     <span>
-                      <i class="fas fa-exclamation-triangle"></i>
+                      <i class="fas fa-exclamation-triangle" aria-hidden="true"></i>
                       Ce département n'a pas encore de contact.
                     </span>
-                    <!-- <button type="button" @click = "buttonAction" class="btn btn-primary btn-lg" id = "back-button">
-                      <i class = "fa fa-arrow-left"></i>
-                      Retour
-                    </button> -->
                   </div>
                 </div>
               </div>
           </div>
           <!-- Panneau à propos -->
-          <div class="leaflet-sidebar-pane" id="a-propos">
+          <div class="leaflet-sidebar-pane" id="a-propos" role="tabpanel" aria-labelledby="about-tab">
               <h2 class="leaflet-sidebar-header">
                 À propos
-                <span class="leaflet-sidebar-close">
-                  <i class="fas fa-step-backward"></i>
-                </span>
+                <button class="leaflet-sidebar-close" aria-label="Fermer le panneau">
+                  <i class="fas fa-step-backward" aria-hidden="true"></i>
+                </button>
               </h2>
-              <a href="https://agence-cohesion-territoires.gouv.fr/" target = "_blank">
-                <img src="img/logo_anct.png" width="100%" style = 'padding-bottom: 5%; padding-top: 5%;'>
+              <a href="https://anct.gouv.fr/" target="_blank" rel="noopener noreferrer">
+                <img src="img/logo_anct.png" width="100%" style="padding-bottom: 5%; padding-top: 5%;" alt="Logo ANCT" loading="lazy">
               </a>
               <p>
                 <b>Réalisation :</b>
-                ANCT, Pôle analyse & diagnostics territoriaux - <a href = 'https://cartotheque.anct.gouv.fr/cartes' target="_blank">Service cartographie</a>, 11/2020
+                ANCT, Pôle analyse & diagnostics territoriaux - <a href="https://cartotheque.anct.gouv.fr/cartes" target="_blank" rel="noopener noreferrer">Service cartographie</a>, 11/2020
               </p>
               <p>
                 Cette carte est alimentée par le service Communication de l'ANCT. 
@@ -112,8 +103,8 @@
       </div>
     </div>
     <!-- carte leaflet -->
-    <div id="mapid"></div>
+    <div id="mapid" role="main" aria-label="Carte interactive des délégués territoriaux"></div>
     <!-- chargement script js -->
-    <script src= "src/app.js"></script>
+    <script src="src/app.js" defer></script>
   </body>
 </html>

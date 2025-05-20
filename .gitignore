@@ -1,4 +1,3 @@
-package.json
 node_modules
 package-lock.json
 settings.json
@@ -6,5 +5,6 @@ settings.json
 *.Rproj
 /nodes_modules
 /data_init
-capture_annuaire.png
 Thumbs.db
+pnpm-lock.yaml
+.DS_Store

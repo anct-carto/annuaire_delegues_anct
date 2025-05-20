@@ -109,12 +109,25 @@ dep_data = getData("geom_dep.geojson");
 cercles_drom = getData("cercles_drom.geojson");
 
 
-let geojson_style_no_data = {
-  fillColor: '#5770be',
-  weight: 0.5,
-  color: 'white',
+// Styles centralisés
+const STYLES = {
+  default: {
+    fillColor: '#5770be',
+    weight: 0.5,
+    color: 'white',
+  },
+  highlight: {
+    weight: 2,
+    color: '#ffe800',
+    fillOpacity: 0.7
+  },
+  drom: {
+    fillColor: 'white',
+    fillOpacity: 0,
+    color: "white",
+    weight: 1.5
+  }
 };
-
 
 async function getData(file) {
   let res = await fetch("data/".concat(file));
@@ -158,42 +171,33 @@ function groupBy(df, keyGetter) {
 
 let clicked_lib_dep;
 
+// Fonctions simplifiées
 function disableFeatureClick(feature) {
-  if (feature.properties.insee_dep === "01") {
-    return false
-  } else { return true}
+  return feature.properties.insee_dep !== "01";
 }
-
 
 function highlightGeomOnListHover(geojson) {
   Array.from(cards).forEach(card => {
     card.addEventListener("mouseover", () => {
-      child = card.firstChild.innerHTML;
-      card_insee_dep = child.split(" - ")[1]
-      console.log(card_insee_dep);      
-      for (let i in geojson) {
-        if (geojson[i].feature.properties.insee_dep === card_insee_dep) {
-          console.log(geojson[i]);
-          console.log("même id");
-        }
-      };
-    })
+      const card_insee_dep = card.firstChild.innerHTML.split(" - ")[1];
+      const matchingFeature = geojson.find(item => 
+        item.feature.properties.insee_dep === card_insee_dep
+      );
+      if (matchingFeature) {
+        highlightFeature({ target: matchingFeature });
+      }
+    });
   });
 }
 
 function highlightFeature(e) {
-  let layer = e.target;
-  
-  layer.setStyle({
-    weight: 2,
-    color: '#ffe800',
-    fillOpacity: 0.7
-  });
+  const layer = e.target;
+  layer.setStyle(STYLES.highlight);
   
   if (!L.Browser.ie && !L.Browser.opera && !L.Browser.edge) {
     layer.bringToFront();
   }
-};
+}
 
 let selected_feature = null;
 
@@ -237,13 +241,11 @@ function resetView() {
 
 function onEachFeature(feature, layer) {
   layer.on({
-      mouseover: highlightFeature,
-      mouseout: resetHighlight,
-      click: zoomToFeature        
+    mouseover: highlightFeature,
+    mouseout: resetHighlight,
+    click: zoomToFeature        
   });
 };
-
-
 
 
 /* -------------------------------------------------------------------------- */
@@ -319,26 +321,17 @@ let customCard = {
 /*                                    VUE                                     */
 /* -------------------------------------------------------------------------- */
 
-let data_url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSHXY9QA7QkHrDHQUAx32hIaBAVcIwzWLH4udws0wPRsB7ckfP7m-9xgA5aLRpAQwMeW4NJeSNWrTGH/pub?output=csv"
-
 function init() {
-  Papa.parse(data_url, {
+  // Charger directement le fichier CSV local
+  Papa.parse('data/data_contacts.csv', {
     download: true,
     header: true,
-    complete: (results) => fetchSpreadsheetData(results.data)
+    complete: (results) => {
+      infos_contacts = results.data;
+      vm.contacts = results.data;
+      console.log("Données chargées:", infos_contacts.length, "contacts");
+    }
   });
-  // Tabletop.init({
-  //   key: data_url,
-  //   callback: fetchSpreadsheetData,
-  //   simpleSheet: true
-  // })
-};
-
-function fetchSpreadsheetData(res) {
-  res.forEach(e => {
-    infos_contacts.push(e)
-  })
-  console.log("Data : loaded");
 }
 
 window.addEventListener('DOMContentLoaded', init);
@@ -358,7 +351,8 @@ let vm = new Vue({
   computed: {
     filteredList: function() {
       return this.contacts.filter(contact => {
-        return contact.lib_dep.concat(" ", contact.insee_dep).toLowerCase().includes(this.search.toLowerCase())
+        if (!contact || !contact.lib_dep || !contact.insee_dep) return false;
+        return (contact.lib_dep + " " + contact.insee_dep).toLowerCase().includes(this.search.toLowerCase());
       })
     },
   },
@@ -383,33 +377,30 @@ let dep_layer;
 dep_data.then(geojson => {
   dep_layer = drawGeoJSON(geojson).addTo(map);
   highlightGeomOnListHover(geojson);
-  // recherche 
+  
+  // Gestionnaire de clic sur les départements
   dep_layer.on("click", layer => {
-    // recupere le code et libellé dep du polygone sélectionné
-    let insee_dep = layer.sourceTarget.feature.properties.insee_dep; 
-    let lib_dep = layer.sourceTarget.feature.properties.lib_dep; 
-    let clicked_dep = lib_dep.concat(' ', insee_dep);
+    const { insee_dep, lib_dep } = layer.sourceTarget.feature.properties;
+    const clicked_dep = `${lib_dep} ${insee_dep}`;
     
-    vm.search = clicked_dep; // rempli la propriété 'search' de vue avec le code dep
+    const contactsForDep = infos_contacts.filter(contact => contact.insee_dep === insee_dep);
+    console.log(`Département ${clicked_dep}:`, contactsForDep.length, "contacts trouvés");
     
-    document.querySelector("#reset-app").addEventListener('click', () => {
-      resetView();
-      dep_layer.resetStyle()
-    });
-    
-  })
+    vm.search = clicked_dep;
+  });
+  
+  // Gestionnaire de reset (déplacé en dehors de la boucle de clic)
+  document.querySelector("#reset-app").addEventListener('click', () => {
+    resetView();
+    dep_layer.resetStyle();
+  });
 });
 
 cercles_drom.then(geojson => {
   new L.GeoJSON(geojson, {
-    style: {
-      fillColor: 'white',
-      fillOpacity:0,
-      color: "white",
-      weight: 1.5
-    },
-    interactive:false,
-  }).addTo(map)
+    style: STYLES.drom,
+    interactive: false,
+  }).addTo(map);
 });
 
 
